@@ -1,3 +1,3 @@
 x
-## Author: Mario 
+## Author: Mario Ruiz & Pedro Bejarano
 
