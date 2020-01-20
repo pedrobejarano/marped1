@@ -82,7 +82,7 @@ Regarding the samples params, there might be 2 possible options:
 
 In the case that you have more than 2 chip and 2 input samples, you must add extra parameter following the previous order and make sure you write them as chip_x and input_x, x referring to the sample number.
 
-    -‘sample_dir’: paste the path to the refers to the TEST folder where you have pasted the params file along with the genome, annotation and samples, given the case you have them already downloaded. 
+   -‘sample_dir’: paste the path to the refers to the TEST folder where you have pasted the params file along with the genome, annotation and samples, given the case you have them already downloaded. 
 
    -‘promoter’: This parameter refers to the length of the promoter for the processing of picks obtained using macs2 function.
 
