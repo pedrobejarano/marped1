@@ -3,7 +3,7 @@ This scripts are done by Pedro J. Bejarano-Diaz and Mario Ruiz-Velazquez for tha
 Take time to read this README. Here you will find the information to premorí the analysis successfully.
 
 
-*NECESSARY TOOLS*
+### NECESSARY TOOLS
 
 
 - R (https://cran.r-project.org/)
@@ -19,7 +19,7 @@ Take time to read this README. Here you will find the information to premorí th
 - path view (R package)
 
 
-*SAMPLE REQUIREMENTS*
+### SAMPLE REQUIREMENTS
 
 
 - If your experiment has the same number of chip samples than input samples, you can use this program by default. For different conditions, you have to modify some parameters of call_peaks.sh.
@@ -40,19 +40,87 @@ Take time to read this README. Here you will find the information to premorí th
  In this case, you will also need to change the script "execute_scriptR.sh" adding the new args that you have or deleting the args that you do not use. You will need to change pipechip.sh and you will need to add new parameters in params.txt.
 
 
-*HOW WORKS*
+### USAGE AND PARAMS FILE
 
 
-This program has 6 bash scripts and 2 R scripts.
+First of all, you must to create a parameters file in order to create those with they may find necessary.
 
-The instruction to execute is: “bash pipe chip.sh params.txt”.
+   -‘Working_directory’: This parameter create the directory where the analysis will be done. We suggest to create a folder called PIPECHIP where you can paste the scripts and a folder called TEST where params file can be added.
 
-	This instruction will execute pipe chip.sh, that create the working directory and copy/download the genome file, the annotation file, and the samples files. Then, this script will launch the next scripts to a High Performance Computing (HPC) with “qsub” instruction. The script pipe chip.sh will launch one script for each sample, due to samples processing is a parallel task.
+   -‘Number_of_samples’: This parameter refers to the total number of samples (both chips and inputs).
 
-Once executed, chip_processing.sh and input_processing.sh will be executed for the sample processing. This two scripts, with have the same instructions to process the chip samples and the input samples, respectively, will do a quality study using fastqc and it will map the short sequences with reference genome using bowtie2. This program CAN PROCESS paired data and unpaired data. Next, the script will generate the .bam file using samtools and it will use a synchronization point through blackboards to launch one call_peaks.sh (next script) for each replica in the right moment.
+   -‘Genome’: There might be 2 possible options depending on having already downloaded or not the reference genome:
 
-Next script is call_peaks.sh. One call_peaks will be launched for each replicas (for each chip and input samples). This script use MACS2 to create a peakAnnotation file though sorted .bam files, that are generated with chip_processing.sh and input_processing.sh. Also, this script will find motifs in the genome using HOMER tool. This process can take a while, be patient. Then, if the number of replicas of your experiment is 1, call_peaks.sh will launch execute_Rscript_onerep.sh. If the number of replicas of your experiment is 2, call_peaks.sh will launch execute_Rscript_tworep.sh. In other case (number of replicas is higher than 2), you must edit the scripts like we tell at *sample requirements*.
+      -If you have already download your genome, you must paste it into the TEST folder inside PIPECHIP. Then, the param genome will be the path to the reference genome inside the TEST folder.
 
-The last two bash scripts are execute_Rscript_onerep.sh and execute_Rscript_tworep.sh. These are the same script, but they are used to experiments with 1 replicas and 2 replicas, respectively. Only use Rscript function to execute the R scripts.
+      -If you haven’t download your genome yet, you must paste in the genome param, the link to the reference genome. 
 
-Finally, the two R scripts (peak_processing_onerep.R and peak_processing_tworep.R) are the same script too, but with some differences. The first script is used to experiments with 1 replicas and second of them is used to experiment with 2 replicas. Function intersect is used by second script. These scripts will extract the peaks and the relative position in the genome of these peaks. This position will show us some information about the transcription factor, for this reason some plots are generated. Also, these scripts will generate a target_genes.txt with all the genes which there is a peak in his promoter. With this file, the scripts will execute an enrichment of gene ontology and a enrichment of KEGG pathways. This can be useful to understand the role of the transcription factor that we are studying. Some plots will be generated, including the 3 more significant KEGG pathways affected by the transcription factor.
+   -‘annotation’: There might be 2 possible options depending on having already download or not the annotation:
+
+      -If you have already download the annotation, you must paste it into the TEST folder inside PIPECHIP. Then, the param genome will be the path to the annotation inside the TEST folder.
+
+      -If you haven’t download the annotation yet, you must pase in the genome param the link to the reference genome. 
+
+   -‘chip_num’: This parameter refers to the number of chip samples.
+
+   -‘input_num’: This parameter refers to the number of input samples.
+
+Regarding the samples params, there might be 2 possible options:
+
+      -If you have already download the samples, you should paste them as well into the TEST folder and add in this parameter the path to this folder.
+
+‘chip_1’: paste the path to the chip 1 sample.
+‘chip_2’: paste the path to the chip 2 sample.
+‘input_1’: paste the path to the input 1 sample.
+‘input_2’: paste the path to the input 2 sample.
+
+      -If you haven’t download the samples yet, you must paste here the SRR accession number from NCBI.
+‘chip_1’: add the right SRR.
+‘chip_2’: add the right SRR.
+‘input_1’: add the right SRR.
+‘input_2’: add the right SRR.
+
+In the case that you have more than 2 chip and 2 input samples, you must add extra parameter following the previous order and make sure you write them as chip_x and input_x, x referring to the sample number.
+
+    -‘sample_dir’: paste the path to the refers to the TEST folder where you have pasted the params file along with the genome, annotation and samples, given the case you have them already downloaded. 
+
+   -‘promoter’: This parameter refers to the length of the promoter for the processing of picks obtained using macs2 function.
+
+   -‘output’: This parameter refers to the directory where you want to save the peak processing file.
+
+
+
+### HOW WORKS
+
+
+
+This program have 4 scripts. In this section we describe each script so as you know how the analysis work.
+
+   -‘pipechip.sh’. This is the main script, and will launch the others. It create the working directory with the samples folders and subfolders. After that it will prompt a question whether you have or not already downloaded the genome. If yes, it will copy it from the TEST folder to the correct one inside the working directory. If not, it will download it from the link given in the params file. Then, the script will prompt another question on whether you have or not already download the annotation. If yes, it will copy it from the TEST folder into the correct one inside the working directory. If not, it will download it from the link given in the params file.Once having downloaded both the genome and annotation it will create the index. After that the script will prompt a third message asking if the samples are downloaded or not. If yes, it will copy them from the TEST folder into the correct one, taking into account chip and inputs samples (__you shall make sure you have added the input and chip samples correctly in the params file__). If not, it will download them using the SRR given in the params file. Once this is done, the script will launch the chip and input processing scripts.
+   
+
+   -‘chip_sample_processing.sh’. This script processes the samples. The .sam, .bam, sorted.bam and sorted.bam.bai files of the chip samples will be created.
+
+   -‘input_sample_processing.sh’. See ‘chip_sample_processing.sh’ but this processes the input samples.
+
+   -‘calling_peaks.sh’. This scripts in launched once the others are done.
+
+
+
+### ANALYSIS
+
+
+
+This pipeline performs a ChIP-Seq analysis along with a functional analysis of the peaks obtained in order to reveal which molecular functions are related to these peaks and a motif finding to identify the family to which the transcription factor (TF) belongs.
+
+Once the peaks are obtained, they will be saved as peaks_n_peak.narrowPeak, among other files. These narrowPeak files will provide you the vital information for the analysis. In order to extract all the information from it, the script `peak_analysis.R` will be launched to the queue. Please, make sure depending on the number of samples, one script or another will be launched (if you have more than 3 samples, thus 3 different .narrowPeak files, check the comments on the Rscript).
+
+To clarify to which family does the TF belong, a HOMER analysis using the findMotifsGenome.pl will be perform. It will perform as many analysis as summit.bed files there are. Each analysis will be saved into a folder named HOMER_x (x as the number of analysis depending on the number of peaks) inside the RESULTS folder.
+
+
+
+## EXAMPLE GIVEN
+
+
+
+For further information about this tool you may like to perform the analysis using the example samples. You may find them in the NCBI accession number __GSE115358__. The genome and the annotation used were obtained from ensembl plants.
