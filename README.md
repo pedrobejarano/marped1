@@ -123,4 +123,4 @@ To clarify to which family does the TF belong, a HOMER analysis using the findMo
 
 
 
-For further information about this tool you may like to perform the analysis using the example samples. You may find them in the NCBI accession number __GSE115358__. The genome and the annotation used were obtained from ensembl plants.
+For further information about this tool you may like to perform the analysis using the example samples. You may find them in the NCBI accession number __GSE99587__ (https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE99587). The genome and the annotation used were obtained from ensembl plants.
